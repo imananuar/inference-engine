@@ -14,9 +14,10 @@ int main(int argc, char* argv[]) {
     
     std::vector<std::vector<float>> matB = createTensor(row, col);
     matB[0][1] = 1;
+    matB[2][2] = 10;
     display2D(&matB);
 
-    std::vector<std::vector<float>> sumMat = addMat(matA, matB);
+    std::vector<std::vector<float>> sumMat = addMat(SUBTRACT, matA, matB);
     display2D(&sumMat);
 
     return 0;
