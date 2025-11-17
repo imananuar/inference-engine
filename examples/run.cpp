@@ -73,30 +73,45 @@ int main(int argc, char* argv[])
     std::vector<std::vector<float>> mul = mulmat(matA, matB);
     // display2D(&mul);
 
-    // Open windows, draw and save
-    // 1. Create blank empty image and open it
-    cv::Mat black = cv::Mat(w, w, CV_8UC4);
-    cv::namedWindow("Iman Window", cv::WINDOW_FULLSCREEN);
-    cv::resizeWindow("Iman Window", 800, 800);
-    cv::imshow("Iman Window", black);
+    // // Open windows, draw and save
+    // // 1. Create blank empty image and open it
+    // cv::Mat black = cv::Mat(w, w, CV_8UC4);
+    // cv::namedWindow("Iman Window", cv::WINDOW_FULLSCREEN);
+    // cv::resizeWindow("Iman Window", 800, 800);
+    // cv::imshow("Iman Window", black);
 
-    // Draw using mouse / trackpad
-    DrawImage d_img;
-    d_img.image = black;
-    cv::setMouseCallback("Iman Window", Draw, &d_img);
-    cv::waitKey(0);
+    // // Draw using mouse / trackpad
+    // DrawImage d_img;
+    // d_img.image = black;
+    // cv::setMouseCallback("Iman Window", Draw, &d_img);
+    // cv::waitKey(0);
 
-    // Save Image
-    cv::resize(d_img.image, d_img.image, cv::Size(28,28), 0, 1, cv::INTER_AREA);
-    cv::imwrite("/Users/imananuar/Documents/development/inference-engine/draw.jpg", d_img.image);
+    // // Save Image // Processing Image
+    // cv::resize(d_img.image, d_img.image, cv::Size(28,28), 0, 1, cv::INTER_AREA);
+
+    // We are going to feed into the hidden layer after this
+    // cv::imwrite("/Users/imananuar/Documents/development/inference-engine/draw.jpg", d_img.image);
+    cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
+    int size = input.rows * input.cols;
+    input.convertTo(input, CV_32F, 1.0/255.0);
+    input = input.reshape(1, size);
+
+    int N = 256;
+    cv::Mat weight = cv::Mat::zeros(1, size, CV_32F);
+    cv::Mat bias = cv::Mat::zeros(N, 1, CV_32F);
+    cv::randu(weight, -0.1f, 0.1f);
+    cv::randu(bias, -0.1f, 0.1f);
+
+    activation_func(&input, &weight, &bias, N);
+    
     cv::destroyWindow("Iman Window");
 
-    // read Image in opencv
-    cv::String imagePath = "/Users/imananuar/Documents/development/inference-engine/s_sparkling.jpg";
-    cv::Mat imageGs = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
-    cv::Mat outImg;
-    imageGs.copyTo(outImg);
-    cv::resize(imageGs, outImg, cv::Size(w, w), 0, 1, cv::INTER_AREA);
+    // // read Image in opencv
+    // cv::String imagePath = "/Users/imananuar/Documents/development/inference-engine/s_sparkling.jpg";
+    // cv::Mat imageGs = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
+    // cv::Mat outImg;
+    // imageGs.copyTo(outImg);
+    // cv::resize(imageGs, outImg, cv::Size(w, w), 0, 1, cv::INTER_AREA);
 
     // cv::waitKey(0);
     cv::destroyAllWindows();
