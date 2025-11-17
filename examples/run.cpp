@@ -3,7 +3,44 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-int main(int argc, char* argv[]) {
+#define w 400
+
+struct DrawImage
+{
+    cv::Point start_point;
+    cv::Point end_point;
+    bool drawing = false;
+    cv::Mat image;
+};
+
+void Draw(int event, int x, int y, int flags, void* img)
+{
+    DrawImage* d_img = static_cast<DrawImage*>(img);
+    if (event == cv::EVENT_LBUTTONDOWN)
+    {
+        std::cout << "Drawing start" << std::endl;
+        d_img->drawing = true;
+        d_img->start_point = cv::Point(x,y);
+        d_img->end_point = cv::Point(x,y);
+
+    } else if (event == cv::EVENT_MOUSEMOVE)
+    {
+        if (d_img->drawing)
+        {
+            d_img->end_point = cv::Point(x, y);
+        }
+    } else if (event == cv::EVENT_LBUTTONUP)
+    {
+        d_img->drawing = false;
+        d_img->end_point = cv::Point(x,y);
+        std::cout << "SP: " << d_img->start_point << ", EP: " << d_img->end_point << std::endl;
+        cv::line(d_img->image, d_img->start_point, d_img->end_point, cv::Scalar(255,255,255,255), 5, cv::LINE_AA);
+        cv::imshow("Iman Window", d_img->image);
+    }
+}
+
+int main(int argc, char* argv[]) 
+{
     std::cout << "Running Inference Engine" << std::endl;
     std::cout << "Testing .hpp file: " << add(1,5) << std::endl;
     int row = 3;
@@ -20,7 +57,7 @@ int main(int argc, char* argv[]) {
     matA[2][0] = 1;
     matA[2][1] = 1;
     matA[2][2] = 1;
-    display2D(&matA);
+    // display2D(&matA);
     
     std::vector<std::vector<float>> matB = createTensor(row, col);
     matB[0][0] = 4;
@@ -31,42 +68,37 @@ int main(int argc, char* argv[]) {
     matB[1][1] = 1;
     matB[2][1] = 2;
 
-    display2D(&matB);
+    // display2D(&matB);
 
     std::vector<std::vector<float>> mul = mulmat(matA, matB);
-    display2D(&mul);
+    // display2D(&mul);
+
+    // Open windows, draw and save
+    // 1. Create blank empty image and open it
+    cv::Mat black = cv::Mat(w, w, CV_8UC4);
+    cv::namedWindow("Iman Window", cv::WINDOW_FULLSCREEN);
+    cv::resizeWindow("Iman Window", 800, 800);
+    cv::imshow("Iman Window", black);
+
+    // Draw using mouse / trackpad
+    DrawImage d_img;
+    d_img.image = black;
+    cv::setMouseCallback("Iman Window", Draw, &d_img);
+    cv::waitKey(0);
+
+    // Save Image
+    cv::resize(d_img.image, d_img.image, cv::Size(28,28), 0, 1, cv::INTER_AREA);
+    cv::imwrite("/Users/imananuar/Documents/development/inference-engine/draw.jpg", d_img.image);
+    cv::destroyWindow("Iman Window");
 
     // read Image in opencv
     cv::String imagePath = "/Users/imananuar/Documents/development/inference-engine/s_sparkling.jpg";
-    // cv::Mat imageColor = cv::imread(imagePath, cv::IMREAD_COLOR);
     cv::Mat imageGs = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
-    // cv::Mat imageUc = cv::imread(imagePath, cv::IMREAD_UNCHANGED);
     cv::Mat outImg;
     imageGs.copyTo(outImg);
+    cv::resize(imageGs, outImg, cv::Size(w, w), 0, 1, cv::INTER_AREA);
 
-    
-    // // Check if the images were loaded successfully
-    // if (imageColor.empty()) {
-        //     std::cout << "Error: ImageColor not found or unable to read." << std::endl;
-        // } else {
-            //     std::cout << "ImageColor loaded successfully!" << std::endl;
-            // }
-            // if (imageGs.empty()) {
-                //     std::cout << "Error: ImageGs not found or unable to read." << std::endl;
-                // } else {
-                    //     std::cout << "ImageGs loaded successfully!" << std::endl;
-                    // }
-                    // if (imageUc.empty()) {
-                        //     std::cout << "Error: ImageUc not found or unable to read." << std::endl;
-                        // } else {
-                            //     std::cout << "ImageUc loaded successfully!" << std::endl;
-                            // };
-    cv::resize(imageGs, outImg, cv::Size(28,28), 0, 0, cv::INTER_AREA);
-    std::cout << "Image Matrix: \n" << outImg << std::endl;
-                            
-
-    cv::imshow("Displayed Output Image", outImg);
-    cv::waitKey(0);
+    // cv::waitKey(0);
     cv::destroyAllWindows();
     std::cout << "All windows close. Exit Program. Thank you!\n" << std::endl;
     return 0;
