@@ -34,8 +34,7 @@ void Draw(int event, int x, int y, int flags, void* img)
 
 int main(int argc, char* argv[]) 
 {
-    std::cout << "Running Inference Engine" << std::endl;
-    std::cout << "Testing .hpp file: " << add(1,5) << std::endl;
+    std::cout << "\n\n\nVROOM VROOM: INFERENCE ENGINE STARTEDDD MEOW MEOW" << std::endl;
     int row = 3;
     int col = 3;
     std::vector<std::vector<float>> matA = createTensor(row, col);
@@ -84,17 +83,30 @@ int main(int argc, char* argv[])
 
     // We are going to feed into the hidden layer after this
     // cv::imwrite("/Users/imananuar/Documents/development/inference-engine/draw.jpg", d_img.image);
-    // cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
+    // cv::Mat input = (cv::Mat_<float>(5, 1) << 0.1, 0.2, 0.3, 0.4, 0.5);
+    // int size = input.rows * input.cols;
+    cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
     // std::cout << input << std::endl;
-    cv::Mat input = (cv::Mat_<float>(5, 1) << 0.1, 0.2, 0.3, 0.4, 0.5);
     int size = input.rows * input.cols;
-    // input.convertTo(input, CV_32F, 1.0/255.0);
-    // input = input.reshape(1, size);
+    input.convertTo(input, CV_32F, 1.0/255.0);
+    input = input.reshape(1, size);
 
-    std::vector<int> nodes = { 4, 3 };
+    std::vector<int> nodes = { 512, 256, 128, 64, 32, 16, 10 };
     HiddenLayer hiddenLayer(nodes, size);
     
-    activation_func(&input, hiddenLayer);
+    cv::Mat output_mat = activation_func(&input, hiddenLayer);
+    std::cout << "OUTPUT MAT" << std::endl;
+    std::cout << output_mat << std::endl;
+    std::cout << "\n" << std::endl;
+
+    double maxVal;
+    cv::Point maxLoc;
+    cv::Mat y_hat = softmax_func(output_mat);
+
+    cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
+    int maxIndex = maxLoc.y;   // because it's a column vector (N×1)
+    std::cout << "Answer = " << maxIndex << " with probability of " << maxVal*100 << "%";
+
     cv::destroyWindow("Iman Window");
     
     // // read Image in opencv
@@ -106,6 +118,6 @@ int main(int argc, char* argv[])
 
     // cv::waitKey(0);
     cv::destroyAllWindows();
-    std::cout << "All windows close. Exit Program. Thank you!\n" << std::endl;
+    std::cout << "\nAll windows close. Exit ANN Program. Thank you!\n" << std::endl;
     return 0;
 }
