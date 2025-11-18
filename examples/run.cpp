@@ -2,16 +2,9 @@
 #include "tensor.hpp"
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <customtype.hpp>
 
 #define w 400
-
-struct DrawImage
-{
-    cv::Point start_point;
-    cv::Point end_point;
-    bool drawing = false;
-    cv::Mat image;
-};
 
 void Draw(int event, int x, int y, int flags, void* img)
 {
@@ -91,21 +84,19 @@ int main(int argc, char* argv[])
 
     // We are going to feed into the hidden layer after this
     // cv::imwrite("/Users/imananuar/Documents/development/inference-engine/draw.jpg", d_img.image);
-    cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
+    // cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
+    // std::cout << input << std::endl;
+    cv::Mat input = (cv::Mat_<float>(5, 1) << 0.1, 0.2, 0.3, 0.4, 0.5);
     int size = input.rows * input.cols;
-    input.convertTo(input, CV_32F, 1.0/255.0);
-    input = input.reshape(1, size);
+    // input.convertTo(input, CV_32F, 1.0/255.0);
+    // input = input.reshape(1, size);
 
-    int N = 256;
-    cv::Mat weight = cv::Mat::zeros(1, size, CV_32F);
-    cv::Mat bias = cv::Mat::zeros(N, 1, CV_32F);
-    cv::randu(weight, -0.1f, 0.1f);
-    cv::randu(bias, -0.1f, 0.1f);
-
-    activation_func(&input, &weight, &bias, N);
+    std::vector<int> nodes = { 4, 3 };
+    HiddenLayer hiddenLayer(nodes, size);
     
+    activation_func(&input, hiddenLayer);
     cv::destroyWindow("Iman Window");
-
+    
     // // read Image in opencv
     // cv::String imagePath = "/Users/imananuar/Documents/development/inference-engine/s_sparkling.jpg";
     // cv::Mat imageGs = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);

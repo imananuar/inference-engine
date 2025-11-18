@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <customtype.hpp>
 
 int add(int a, int b) {
     return a + b;
@@ -71,28 +72,60 @@ std::vector<std::vector<float>> mulmat(
     return matC;
 }
 
-void activation_func(cv::Mat *input, cv::Mat *weight, cv::Mat *bias, int nodes)
+void activation_func(cv::Mat *input, HiddenLayer layers)
 {
     if (input == nullptr || input->empty())
     {
         std::cerr << "Error: Invalid image pointer or empty image." << std::endl;
         return;
     }
-    
-    cv::Mat z_mat = cv::Mat::zeros(nodes, 1, CV_32F);
-    for (int n = 0; n < nodes; n++)
-    {
-        float z;
-        for (int r = 0; r < input->rows; r++) 
-        {
-            for (int c = 0; c < input->cols; c++) 
-            {
-                z = (float)input->at<float>(r, c) * (float)weight->at<float>(c, r);
-            }
-        }
-        z += (float)weight->at<float>(0, n);
-        z_mat.at<float>(n, 0) = z;
-    }
 
-    std::cout << z_mat << std::endl;
+    std::cout << "\n\nNEURAL NETWORK FORWARD PROPAGATION START" << std::endl;
+    std::cout << "TOTAL LAYER: " << layers.getNodes().size() << std::endl;
+    
+    cv::Mat x = *input;
+    for (int i = 0; i < layers.getNodes().size(); i++)
+    {
+        int nodes = layers.getNodes().at(i);
+        std::cout << "Running for layer: " << i << std::endl;
+        std::cout << "Nodes size: " << nodes << std::endl;
+        std::cout << "\n";
+        
+        cv::Mat z_mat = cv::Mat::zeros(nodes, 1, CV_32F);
+        cv::Mat weight = layers.getWeight().at(i);
+        cv::Mat bias = layers.getBias().at(i);
+
+        std::cout << "Input: " << x << std::endl;
+        std::cout << "\n";
+        std::cout << "Weight: " << weight << std::endl;
+        std::cout << "\n";
+        std::cout << "Bias: " << bias << std::endl;
+        
+        // For each node
+        for (int j = 0; j < nodes; j++)
+        {
+            float z;
+            // Summation x*w
+            std::cout << "\nNODE NO: " << j << std::endl;
+            std::cout << "z = ";
+            for (int row = 0; row < x.rows; row++) {
+                z = (float)x.at<float>(row, 0) * (float)weight.at<float>(0, row);
+                std::cout << (float)x.at<float>(row, 0) << " * " << (float)weight.at<float>(0, row) << " + ";
+            }
+            // Add bias
+            std::cout << (float)bias.at<float>(j, 0) << std::endl;
+            z += (float)bias.at<float>(j, 0);
+            
+            // Append to z matrix -> This will be new input for second layer
+            z_mat.at<float>(j, 0) = z;
+            std::cout << "z = " << z << std::endl;
+            x = z;
+        }
+
+        std::cout << "\nZ_Matrix for layer: " << i << std::endl;
+        std::cout << z_mat << std::endl;
+        x = z_mat;
+        std::cout << "\nNext Input: " << x << std::endl;
+        std::cout << "----------------------------------------------------------\n" << std::endl;
+    }
 }
