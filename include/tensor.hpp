@@ -18,4 +18,4 @@ std::vector<std::vector<float>> mulmat(std::vector<std::vector<float>> matA, std
 
 cv::Mat activation_func(cv::Mat *input, HiddenLayer hiddenLayer);
 cv::Mat softmax_func(cv::Mat output);
-void train_model(std::vector<int> nodes, cv::Mat input);
+void train_model(std::vector<int> nodes, cv::Mat input, float16_t learning_rate);

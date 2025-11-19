@@ -72,20 +72,23 @@ std::vector<std::vector<float>> mulmat(
     return matC;
 }
 
-void train_model(std::vector<int> layers, cv::Mat input)
+void train_model(std::vector<int> layers, cv::Mat input, float16_t learning_rate)
 {
     std::cout << "\nTRAINING MODEL -> " << layers.size() << " Layers\n" << std::endl;
     std::vector<HiddenLayer> hiddenLayer_arr;
     
-    for (int nodes: layers)
+    cv::Mat raw_y;
+    cv::Mat y_hat;
+    float eSum;
+    for (int layer = 0; layer < layers.size(); layer++)
     {
         cv::Mat a_mat;
         int inputSize = input.rows * input.cols;
-        HiddenLayer HiddenLayer(nodes, inputSize);
-        HiddenLayer.displayWeight();
-        HiddenLayer.displayBias();
+        HiddenLayer HiddenLayer(layers[layer], inputSize);
+        // HiddenLayer.displayWeight();
+        // HiddenLayer.displayBias();
         hiddenLayer_arr.push_back(HiddenLayer);
-        for (int node = 0; node < nodes; node++)
+        for (int node = 0; node < layers[layer]; node++)
         {
             // For each node, we will find x, y value for that node
             // x = z = ∑input*w + b
@@ -99,14 +102,34 @@ void train_model(std::vector<int> layers, cv::Mat input)
 
             // y = a = ReLU(z);
             a = std::max(0.0000000f, z);
-
+            eSum += std::exp(a);
             // We only keep the a value because that is only matter to us
             a_mat.push_back(a);
-
         }
-        std::cout << "\nResult for node " << nodes << ":" << std::endl;
-        std::cout << a_mat << std::endl;
+
+        if ( layer == layers.size()-1 )
+        {
+            raw_y = a_mat;
+            for (int y = 0; y < raw_y.rows; y++)
+            {
+                std::cout << "eSum: " << eSum << std::endl;
+                std::cout << "e: " << std::exp(raw_y.at<float>(y, 0)) << std::endl;
+                y_hat.push_back(std::exp(raw_y.at<float>(y, 0)) / eSum);
+            }
+        }
     }
+
+    std::cout << "\nTraining done!\n" << std::endl;
+    std::cout << "Output Node (Before softmax function)" << std::endl;
+    std::cout << raw_y << std::endl;
+    std::cout << "\ny_hat (After apply softmax)" << std::endl;
+    std::cout << y_hat << std::endl;
+    std::cout << "\n" << std::endl;
+
+    double maxVal;
+    cv::Point maxLoc;
+    cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
+    std::cout << "answer is: " << maxLoc.y << std::endl;
 }
 
 // cv::Mat activation_func(cv::Mat *input, HiddenLayer layers)

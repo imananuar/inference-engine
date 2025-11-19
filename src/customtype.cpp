@@ -4,6 +4,7 @@
 // Describing how many nodes are that in particular layer
 // Param: Nodes in the layer, input size (number of nodes before)
 // THIS IS NOT A ARRAY OF LAYER.
+
 HiddenLayer::HiddenLayer(int nodes, int inputSize)
 {
     // Assuming input: (2, 3)

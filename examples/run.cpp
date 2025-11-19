@@ -92,10 +92,10 @@ int main(int argc, char* argv[])
     
     // std::vector<int> nodes = { 512, 256, 128, 64, 32, 16, 10 };
 
-    cv::Mat input = (cv::Mat_<float>(5, 1) << 0.04, 0.42, 0.014, 0.22, 0.12);
+    cv::Mat input = (cv::Mat_<float>(2, 1) << 0.04, 0.42 );
     int size = input.rows * input.cols;
-    std::vector<int> layers = { 16, 8, 4 };
-    train_model(layers, input);
+    std::vector<int> layers = { 16, 8, 4, 3 };
+    train_model(layers, input, 0.001f);
 
     // HiddenLayer HiddenLayer(5, size);
     // std::cout << "Hidden Layer Weight: " << std::endl;
@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
 
     // double maxVal;
     // cv::Point maxLoc;
+    // cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
     // cv::Mat y_hat = softmax_func(output_mat);
 
     // Calculating cross-entropy / loss
@@ -120,7 +121,6 @@ int main(int argc, char* argv[])
     // Answer
     // int y = 1;
 
-    // cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
     // int maxIndex = maxLoc.y;   // because it's a column vector (N×1)
     // std::cout << "Answer = " << maxIndex << " with probability of " << maxVal*100 << "%";
 
@@ -135,6 +135,5 @@ int main(int argc, char* argv[])
 
     // cv::waitKey(0);
     cv::destroyAllWindows();
-    std::cout << "\nAll windows close. Exit ANN Program. Thank you!\n" << std::endl;
     return 0;
 }
