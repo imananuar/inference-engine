@@ -3,6 +3,9 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <customtype.hpp>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #define w 400
 
@@ -92,10 +95,63 @@ int main(int argc, char* argv[])
     
     // std::vector<int> nodes = { 512, 256, 128, 64, 32, 16, 10 };
 
-    cv::Mat input = (cv::Mat_<float>(2, 1) << 0.04, 0.42 );
-    int size = input.rows * input.cols;
-    std::vector<int> layers = { 16, 8, 4, 3 };
-    train_model(layers, input, 0.001f);
+    std::ifstream file("/Users/imananuar/Downloads/digit-recognizer/train.csv");
+    if (!file.is_open())
+    {
+        return 1;
+    }
+
+    std::string line;
+    int lineNum = 0;
+    
+    int batch = 10;
+    std::vector<cv::Mat> total_input_mat[batch];
+    cv::Mat total_input_ans = cv::Mat::zeros(batch, 1, CV_32SC1);
+    
+    cv::Mat input = cv::Mat::zeros(784, 1, CV_32F);
+    int input_ans;
+
+    std::cout << "Batch size = " << batch << std::endl;
+    std::cout << "Processing file..." << std::endl;
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string cell;
+        // std::vector<std::string> row_data;
+
+        if (lineNum && lineNum <= batch) {
+            int col = 0;
+            while(std::getline(ss, cell, ','))
+            {
+                if (col) 
+                { 
+                    // std::cout << "At col = " << col << ", lineNum = " << lineNum << std::endl;
+                    input.at<float>(col-1, 0) = ((float)std::stoi(cell))/255;
+                } else
+                {
+                    // std::cout << "At col = " << col << ", lineNum = " << lineNum << std::endl;
+                    total_input_ans.at<int>(lineNum-1, 0) = std::stoi(cell);
+                }
+                col++;
+                // if (col > 1) { break; }
+            }
+            // break;
+            total_input_mat->push_back(input);
+        }
+        lineNum++;
+    }
+    file.close();
+    std::cout << "Finish processing file for batch = " << batch << std::endl;
+    std::cout << "\nProceed with training the data" << std::endl;
+
+    // std::cout << "\nInput Matrix: " << std::endl;
+    // std::cout << input << std::endl;
+    
+    // cv::Mat input = (cv::Mat_<float>(2, 1) << 0.04, 0.42 );
+    // int size = input.rows * input.cols;
+    // std::vector<int> layers = { 16, 8, 4, 3 };
+
+    // train_model(layers, input, 0.001f);
 
     // HiddenLayer HiddenLayer(5, size);
     // std::cout << "Hidden Layer Weight: " << std::endl;
