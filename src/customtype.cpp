@@ -1,27 +1,33 @@
 #include "customtype.hpp"
 
-HiddenLayer::HiddenLayer(std::vector<int> nodes, int inputSize)
+// SINGLE HIDDEN LAYER
+// Describing how many nodes are that in particular layer
+// Param: Nodes in the layer, input size (number of nodes before)
+// THIS IS NOT A ARRAY OF LAYER.
+HiddenLayer::HiddenLayer(int nodes, int inputSize)
 {
+    // Assuming input: (2, 3)
     this->nodes = nodes;
 
-    for (int i = 0; i < nodes.size(); i++)
+    // BIAS: An array of scalar
+    // Array.length = number of nodes.
+    // Initialization might be 0? Then we play around with the bias
+    this->bias = cv::Mat::ones(nodes, 1, CV_32F) * 0.01f;
+
+    for (int i = 0; i < nodes; i++)
     {
-        // weight matrix: (nodes[i] x inputSize)
+        // WEIGHT: An array of matrix
+        // Array.length = number of nodes in the hidden layer
+        // Matrix.length = Number of input nodes
+        // Initialization using Kaiming Init. Src: https://www.geeksforgeeks.org/deep-learning/kaiming-initialization-in-deep-learning/
         cv::Mat w = cv::Mat::zeros(1, inputSize, CV_32F);
-        cv::randu(w, -0.1f, 0.1f);
-
-        // bias: (nodes[i] x 1)
-        cv::Mat b = cv::Mat::zeros(nodes[i], 1, CV_32F);
-        cv::randu(b, -0.1f, 0.1f);
-
-        weight.push_back(w);
-        bias.push_back(b);
-
-        inputSize = nodes[i];
+        float stddev = std::sqrt(2.0f/nodes);
+        cv::randn(w, 0, stddev);
+        this->weight.push_back(w);
     }
 }
 
-std::vector<int> HiddenLayer::getNodes() {
+int HiddenLayer::getNodes() {
     return nodes;
 }
 
@@ -29,6 +35,21 @@ std::vector<cv::Mat> HiddenLayer::getWeight() {
     return weight;
 }
 
-std::vector<cv::Mat> HiddenLayer::getBias() {
+cv::Mat HiddenLayer::getBias() {
     return bias;
+}
+
+void HiddenLayer::displayWeight()
+{
+    for (int i = 0; i < weight.size(); i++ )
+    {
+        std::cout << "\nWeight for node = " << i+1 << std::endl;
+        std::cout << weight.at(i) << std::endl;
+    }
+}
+
+void HiddenLayer::displayBias()
+{
+    std::cout << "\nBias:" << std::endl;
+    std::cout << bias << std::endl;
 }

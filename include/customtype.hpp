@@ -12,15 +12,16 @@ struct DrawImage
 class HiddenLayer
 {
     private:
-    std::vector<int> nodes;
-    std::vector<cv::Mat> bias;
+    int nodes;
     std::vector<cv::Mat> weight;
+    cv::Mat bias;
 
     public:
-    HiddenLayer(std::vector<int> nodes, int inputSize);
+    HiddenLayer(int nodes, int inputSize);
 
-    std::vector<int> getNodes();
-
+    int getNodes();
     std::vector<cv::Mat> getWeight();
-    std::vector<cv::Mat> getBias();
+    cv::Mat getBias();
+    void displayWeight();
+    void displayBias();
 };

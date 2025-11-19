@@ -83,29 +83,46 @@ int main(int argc, char* argv[])
 
     // We are going to feed into the hidden layer after this
     // cv::imwrite("/Users/imananuar/Documents/development/inference-engine/draw.jpg", d_img.image);
-    // cv::Mat input = (cv::Mat_<float>(5, 1) << 0.1, 0.2, 0.3, 0.4, 0.5);
-    // int size = input.rows * input.cols;
-    cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
-    // std::cout << input << std::endl;
-    int size = input.rows * input.cols;
-    input.convertTo(input, CV_32F, 1.0/255.0);
-    input = input.reshape(1, size);
-
-    std::vector<int> nodes = { 512, 256, 128, 64, 32, 16, 10 };
-    HiddenLayer hiddenLayer(nodes, size);
     
-    cv::Mat output_mat = activation_func(&input, hiddenLayer);
-    std::cout << "OUTPUT MAT" << std::endl;
-    std::cout << output_mat << std::endl;
-    std::cout << "\n" << std::endl;
+    // cv::Mat input = cv::imread("/Users/imananuar/Documents/development/inference-engine/draw.jpg", cv::IMREAD_GRAYSCALE);
+    // // std::cout << input << std::endl;
+    // int size = input.rows * input.cols;
+    // input.convertTo(input, CV_32F, 1.0/255.0);
+    // input = input.reshape(1, size);
+    
+    // std::vector<int> nodes = { 512, 256, 128, 64, 32, 16, 10 };
 
-    double maxVal;
-    cv::Point maxLoc;
-    cv::Mat y_hat = softmax_func(output_mat);
+    cv::Mat input = (cv::Mat_<float>(5, 1) << 0.04, 0.42, 0.014, 0.22, 0.12);
+    int size = input.rows * input.cols;
+    std::vector<int> layers = { 16, 8, 4 };
+    train_model(layers, input);
 
-    cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
-    int maxIndex = maxLoc.y;   // because it's a column vector (N×1)
-    std::cout << "Answer = " << maxIndex << " with probability of " << maxVal*100 << "%";
+    // HiddenLayer HiddenLayer(5, size);
+    // std::cout << "Hidden Layer Weight: " << std::endl;
+    // HiddenLayer.displayWeight();
+    // HiddenLayer.displayBias();
+    // std::cout << HiddenLayer.getWeight().at(4) << std::endl;
+
+    // HiddenLayer hiddenLayer(nodes, size);
+    
+    // cv::Mat output_mat = activation_func(&input, hiddenLayer);
+    // std::cout << "OUTPUT MAT" << std::endl;
+    // std::cout << output_mat << std::endl;
+    // std::cout << "\n" << std::endl;
+
+    // double maxVal;
+    // cv::Point maxLoc;
+    // cv::Mat y_hat = softmax_func(output_mat);
+
+    // Calculating cross-entropy / loss
+    
+
+    // Answer
+    // int y = 1;
+
+    // cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
+    // int maxIndex = maxLoc.y;   // because it's a column vector (N×1)
+    // std::cout << "Answer = " << maxIndex << " with probability of " << maxVal*100 << "%";
 
     cv::destroyWindow("Iman Window");
     
