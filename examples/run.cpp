@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     std::string line;
     int lineNum = 0;
     
-    int batch = 10;
+    int batch = 5;
     std::vector<cv::Mat> total_input_mat[batch];
     cv::Mat total_input_ans = cv::Mat::zeros(batch, 1, CV_32SC1);
     
@@ -141,39 +141,34 @@ int main(int argc, char* argv[])
         lineNum++;
     }
     file.close();
+
     std::cout << "Finish processing file for batch = " << batch << std::endl;
     std::cout << "\nProceed with training the data" << std::endl;
-
-    // std::cout << "\nInput Matrix: " << std::endl;
-    // std::cout << input << std::endl;
     
-    // cv::Mat input = (cv::Mat_<float>(2, 1) << 0.04, 0.42 );
-    // int size = input.rows * input.cols;
-    // std::vector<int> layers = { 16, 8, 4, 3 };
-
-    // train_model(layers, input, 0.001f);
-
+    std::vector<int> layers = { 256, 128, 64, 32, 16, 10 };
+    train_model(total_input_mat, total_input_ans, 1, layers, 0.001f);
+    
     // HiddenLayer HiddenLayer(5, size);
     // std::cout << "Hidden Layer Weight: " << std::endl;
     // HiddenLayer.displayWeight();
     // HiddenLayer.displayBias();
     // std::cout << HiddenLayer.getWeight().at(4) << std::endl;
-
+    
     // HiddenLayer hiddenLayer(nodes, size);
     
     // cv::Mat output_mat = activation_func(&input, hiddenLayer);
     // std::cout << "OUTPUT MAT" << std::endl;
     // std::cout << output_mat << std::endl;
     // std::cout << "\n" << std::endl;
-
+    
     // double maxVal;
     // cv::Point maxLoc;
     // cv::minMaxLoc(y_hat, nullptr, &maxVal, nullptr, &maxLoc);
     // cv::Mat y_hat = softmax_func(output_mat);
-
+    
     // Calculating cross-entropy / loss
     
-
+    
     // Answer
     // int y = 1;
 

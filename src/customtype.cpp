@@ -22,7 +22,7 @@ HiddenLayer::HiddenLayer(int nodes, int inputSize)
         // Matrix.length = Number of input nodes
         // Initialization using Kaiming Init. Src: https://www.geeksforgeeks.org/deep-learning/kaiming-initialization-in-deep-learning/
         cv::Mat w = cv::Mat::zeros(1, inputSize, CV_32F);
-        float stddev = std::sqrt(2.0f/nodes);
+        float stddev = std::sqrt( 2.0f / inputSize );
         cv::randn(w, 0, stddev);
         this->weight.push_back(w);
     }
