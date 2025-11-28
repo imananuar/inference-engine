@@ -25,3 +25,4 @@ void Relu(Layer &L);
 void Softmax(Layer &L);
 void computeOutputDelta(Layer &L, int label);
 void backward(Layer &oL, Layer &iL);
+void sgdUpdate(Layer &L, std::vector<float> &input, float lr);

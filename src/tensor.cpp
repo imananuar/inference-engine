@@ -255,41 +255,63 @@ void trainModelV2(int epoch, int training_size)
 
     // For each round
     int label = 1;
+    float lr = 1.0f;
     for (int i = 0; i < epoch; i++)
     {
+        for (int i = 0; i < output * output2; i++)
+        {
+            std::cout << "weight " << i << " = " << hiddenLayer2.W[i] << std::endl;
+        }
+        // First hidden Layer
         forward(hiddenLayer, inputMat);
         Relu(hiddenLayer);
 
+        // Last hidden layer = Output Layer
         forward(hiddenLayer2, hiddenLayer.a);
+        Softmax(hiddenLayer2);
         // Relu(hiddenLayer2);
 
         // forward(hiddenLayer3, hiddenLayer2.a);
         // Relu(hiddenLayer3);
 
-        Softmax(hiddenLayer2);
         computeOutputDelta(hiddenLayer2, label);
         backward(hiddenLayer, hiddenLayer2);
+
+        sgdUpdate(hiddenLayer2, hiddenLayer.a, lr);
+        sgdUpdate(hiddenLayer, inputMat, lr);
+
+        std::cout << "\n========================" << std::endl;
+        for (int i = 0; i < output * output2; i++)
+        {
+            std::cout << "weight " << i << " = " << hiddenLayer2.W[i] << std::endl;
+        }
 
         break;
     }
 }
 
+void sgdUpdate(Layer &L, std::vector<float> &input, float lr)
+{
+    for (int i = 0; i < L.out; i++)
+    {
+        L.b[i] -= L.delta[i] * lr;
+        for (int j = 0; j < L.in; j++)
+        {
+            L.W[i * L.in + j] -= lr * L.delta[i] * input[i];
+        }
+    }
+}
+
 void backward(Layer &L, Layer &next)
 {
-
     for (int i = 0; i < L.out; i++)
     {
         float sum = 0.0f;
         for (int j = 0; j < next.out; j++)
         {
-            // std::cout << "Weight = " << j * L.out + i << std::endl;
-            std::cout << next.delta[j] << "*" << next.W[(j * L.out) + i] << std::endl;
             sum += next.delta[j] * next.W[(j * L.out) + i];
         }
         L.delta[i] = (L.a[i] > 0.01f ? sum : 0.0f);
-        // iL.delta[i] = (iL.a[i] > 0.01f ? sum : 0.0f);
-        std::cout << "Input Layer activation = " << L.a[i] << std::endl;
-        std::cout << "Input Layer delta = " << L.delta[i] << std::endl;
     }
 }
 
