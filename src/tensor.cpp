@@ -3,6 +3,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <customtype.hpp>
+#include <random>
 
 int add(int a, int b) {
     return a + b;
@@ -76,34 +77,34 @@ void train_model(std::vector<cv::Mat> inputMat[], cv::Mat inputAns, int epoch, s
 {
     int batchSize = inputAns.rows;
     int roundSize = batchSize / epoch;
+    std::vector<HiddenLayer> hiddenLayer_arr;
+    float predict;
+    cv::Mat raw_y;
+    cv::Mat ce_loss;
+
     std::cout << inputMat->size() << std::endl;
     std::cout << "\nTRAINING MODEL" << std::endl;
     std::cout << "Input Matrix [col, row]: " << inputMat->at(0).size() << std::endl;
     std::cout << "Training Size: " << batchSize << std::endl;
     std::cout << "Layers: " << layers.size() << std::endl;
     std::cout << "Round Size: " << roundSize << std::endl;
-    
-
-    std::vector<HiddenLayer> hiddenLayer_arr;
-    
-    cv::Mat raw_y;
-    cv::Mat y_hats;
-    cv::Mat ce_loss;
-    float eSum;
-
-    for (int i = 0; i < roundSize; i++)
+    std::cout << "input answer = " << std::endl;
+    std::cout << inputAns << std::endl;
+    for (int round = 0; round < roundSize; round++)
     {
-        std::cout << "Training for Round " << i << std::endl;
-        cv::Mat input = inputMat->at(i);
+        // FORWARD PROPAGATION
+        std::cout << "=====================================================================" << std::endl;
+        std::cout << "\nTRAINING: ROUND = " << round;
+        cv::Mat input = inputMat->at(round);
+        std::cout << "..." << std::endl;
         for (int layer = 0; layer < layers.size(); layer++)
         {
-            cv::Mat a_mat;
             int inputSize = input.rows * input.cols;
             HiddenLayer HiddenLayer(layers[layer], inputSize);
-            std::cout << "Processing for layer: " << layer + 1;
-            std::cout << ", Node size:  " << layers[layer] << std::endl;
-
-            hiddenLayer_arr.push_back(HiddenLayer);
+            
+            // std::cout << "Processing for layer: " << layer + 1;
+            // std::cout << ", Node size:  " << layers[layer] << std::endl;
+            float e_sum = 0;
             for (int node = 0; node < layers[layer]; node++)
             {
                 // For each node, we will find x, y value for that node
@@ -112,60 +113,151 @@ void train_model(std::vector<cv::Mat> inputMat[], cv::Mat inputAns, int epoch, s
                 float a;
                 for (int row = 0; row < input.rows; row++)
                 {
+                    // z = ∑input*w 
                     z += input.at<float>(row, 0) * HiddenLayer.getWeight().at(node).at<float>(0, row);
                 }
+                // z += b
                 z += HiddenLayer.getBias().at<float>(node, 0);
-    
-                // y = a = ReLU(z);
-                a = std::max(0.01f, z);
-
-                // Calculate softmax denominator when reach last layer = output layer
-                if ( layer == layers.size() - 1 ) {
-                    std::cout << "Last layer with node = " << layers[layer] << std::endl; 
-                    eSum += std::exp(a);
+                HiddenLayer.setWeightedSum(z);
+                
+                if ( layer != layers.size() -1 )
+                {
+                    // Set activation to leak-ReLU function if it is not the last layer
+                    // HiddenLayer.setActivation(layer, std::max(0.01f, z));
+                    HiddenLayer.setActivation(std::max(0.01f, z));
+                } else
+                // If last layer
+                {
+                    e_sum += std::exp(z);
                 }
-
-                // We only keep the a value because that is only matter to us
-                a_mat.push_back(a);
             }
-    
+            
             if ( layer == layers.size()-1 )
             {
-                raw_y = a_mat;
-                for (int y = 0; y < raw_y.rows; y++)
+                
+                for (int i = 0; i < HiddenLayer.getWeightedSum().rows; i++)
                 {
-                    float32_t y_hat = std::exp(raw_y.at<float>(y, 0)) / eSum;
-                    std::cout << "std::exp(raw_y.at<float>(y, 0)) = " << std::exp(raw_y.at<float>(y, 0)) << std::endl;
-                    std::cout << "eSum = " << eSum << std::endl;
-                    std::cout << "y_hat = " << y_hat << std::endl;
-                    y_hats.push_back(y_hat);
-
+                    float y_hat = std::exp(HiddenLayer.getWeightedSum().at<float>(i, 0)) / e_sum;
+                    // HiddenLayer.setActivation(i, y_hat);
+                    HiddenLayer.setActivation(y_hat);
+                    // y_hats.push_back(y_hat);
+                    
                     float32_t ce = -1.0f * std::log(y_hat);
                     ce_loss.push_back(ce);
                 }
-            }
+                double maxVal;
+                cv::Point maxLoc;
+                cv::minMaxLoc(HiddenLayer.getActivation(), nullptr, &maxVal, nullptr, &maxLoc);
+                std::cout << "\nSoftmax for round = " << round << std::endl;
+                std::cout << HiddenLayer.getActivation() << std::endl;
+                predict = maxLoc.y;
+                raw_y = HiddenLayer.getWeightedSum();
+            } 
+            hiddenLayer_arr.push_back(HiddenLayer);
         }
     
-        std::cout << "\nTRAINING COMPLETED!" << std::endl;
-        std::cout << "Output Node (Before softmax function)" << std::endl;
-        std::cout << raw_y << std::endl;
-        std::cout << "\ny_hat (After apply softmax)" << std::endl;
-        std::cout << y_hats << std::endl;
+        // std::cout << "\nTRAINING COMPLETED!\n" << std::endl;
+        // std::cout << "Output Node (Before softmax function)" << std::endl;
+        // std::cout << raw_y << std::endl;
+        // std::cout << "\ny_hat (After apply softmax)" << std::endl;
+        // std::cout << y_hats << std::endl;
+        // std::cout << "\nCross Entropy Loss: " << std::endl;
+        // std::cout << ce_loss << std::endl;
     
-        double maxVal;
-        cv::Point maxLoc;
-        cv::minMaxLoc(y_hats, nullptr, &maxVal, nullptr, &maxLoc);
+        int answer = inputAns.at<int32_t>(round, 0);
+        std::cout << "\nObserved value = " << inputAns.at<int32_t>(round, 0) << std::endl;
+        std::cout << "Predicted value = " << predict << std::endl;
+        std::cout << "\n----------------------------------------------------------------" << std::endl;
+
+
+        // BACK PROPAGATION
+        std::cout << "\nRUN BACK PROPAGATION" << std::endl;
+        for (int layer = layers.size() - 1; layer > 0; layer--)
+        {
+            HiddenLayer h_Layer = hiddenLayer_arr[layer * (round + 1) + round];
+            
+            std::cout << "\nHidden Layer for layer = " << layer  << std::endl;
+            // std::cout << h_Layer.getUpdatedBias() << std::endl;
+            std::cout << "\nactivation value = " << std::endl;
+            std::cout << h_Layer.getActivation() << std::endl;
+
+            for (int node = 0; node < hiddenLayer_arr[layer].getNodes(); node++)
+            {
+                // There are something wrong here. dL_dB is not correctly assigned
+                float dL_dB = h_Layer.getActivation().at<float>(node, 0);
+                // std::cout << dL_dB << " <- Before current" << std::endl;
+                if ( node == answer )
+                {
+                    dL_dB -= 1.0f;
+                }
+                float current = h_Layer.getUpdatedBias().at<float>(node, 0);
+                h_Layer.setUpdatedBias(node, current + dL_dB);
+            }
+            std::cout << "\nRound = " << round << std::endl;
+            std::cout << "Layer = " << layer << std::endl;
+            std::cout << "Updated_bias = " << std::endl;
+            std::cout << h_Layer.getUpdatedBias() << std::endl;
+            break;
+        }
+
+        if (round == 2)
+        {
+            break;
+        }
+    }
     
-        int real_y = 1;
-        int predict_y = maxLoc.y;
-        std::cout << "\nCross Entropy Loss: " << std::endl;
-        std::cout << ce_loss << std::endl;
-        std::cout << "\nTotal Cross Entropy: " << cv::sum(ce_loss)[0] << std::endl;
-        
-        std::cout << "\nObserved value = " << inputAns.at<int32_t>(i, 0) << std::endl;
-        std::cout << "Predicted value = " << predict_y << std::endl;
-        break;
+    std::cout << "\n" << std::endl;
+}
+
+void trainModelV2(int epoch, int training_size)
+{
+    int input = 3;
+    int output = 5;
+    std::vector<float> inputMat{0.23f, 0.47f, 0.9f};
+
+    Layer hiddenLayer;
+    hiddenLayer.in = input;
+    hiddenLayer.out = output;
+
+    std::vector<float> weight(input * output);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    float stddev = std::sqrt( 2.0f / input );
+    std::uniform_real_distribution<float> dist(-stddev, stddev);
+    for (float &v : weight)
+    {
+        v = dist(gen);
     }
 
-    std::cout << "\n" << std::endl;
+    hiddenLayer.W = weight;
+    hiddenLayer.b = std::vector<float>(output, 0.01f);
+    hiddenLayer.z = std::vector<float>(output, 0.0f);
+    hiddenLayer.a = std::vector<float>(output, 0.0f);
+
+    Layer outputLayer;
+
+    // For each round
+    for (int i = 0; i < epoch; i++)
+    {
+        forward(hiddenLayer, inputMat);
+        for (int j = 0; j < hiddenLayer.out; j++)
+        {
+            std::cout << "\nz = " << hiddenLayer.z[j] << std::endl;
+        }
+        break;
+    }
+}
+
+void forward(Layer &L, const std::vector<float> &input)
+{
+    for (int out = 0; out < L.out; out++)
+    {
+        for (int in = 0; in < L.in; in++)
+        {
+            // w = L.W[(L.in * out) + in];
+            L.z[out] += input[in] * L.W[(L.in * out) + in];
+        }
+        L.z[out] += L.b[out];
+        std::cout << "\nz = w*input + b = " << L.z[out];
+    }
 }

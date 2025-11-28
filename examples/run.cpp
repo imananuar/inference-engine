@@ -146,7 +146,8 @@ int main(int argc, char* argv[])
     std::cout << "\nProceed with training the data" << std::endl;
     
     std::vector<int> layers = { 256, 128, 64, 32, 16, 10 };
-    train_model(total_input_mat, total_input_ans, 1, layers, 0.001f);
+    // train_model(total_input_mat, total_input_ans, 1, layers, 0.001f);
+    trainModelV2(5, 5);
     
     // HiddenLayer HiddenLayer(5, size);
     // std::cout << "Hidden Layer Weight: " << std::endl;
