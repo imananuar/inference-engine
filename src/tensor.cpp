@@ -233,22 +233,80 @@ void trainModelV2(int epoch, int training_size)
     hiddenLayer.b = std::vector<float>(output, 0.01f);
     hiddenLayer.z = std::vector<float>(output, 0.0f);
     hiddenLayer.a = std::vector<float>(output, 0.0f);
+    hiddenLayer.delta = std::vector<float>(output, 0.0f);
 
-    Layer outputLayer;
+
+    Layer hiddenLayer2;
+    int output2 = 4;
+    hiddenLayer2.in = hiddenLayer.out;
+    hiddenLayer2.out = output2;
+    stddev = std::sqrt( 2.0f / hiddenLayer.out );
+    std::uniform_real_distribution<float> dist2(-stddev, stddev);
+    std::vector<float> weight2(hiddenLayer.out * output2);
+    for (float &v : weight2)
+    {
+        v = dist2(gen);
+    }
+    hiddenLayer2.W = weight2;
+    hiddenLayer2.b = std::vector<float>(output2, 0.01f);
+    hiddenLayer2.z = std::vector<float>(output2, 0.0f);
+    hiddenLayer2.a = std::vector<float>(output2, 0.0f);
+    hiddenLayer2.delta = std::vector<float>(output2, 0.0f);
 
     // For each round
+    int label = 1;
     for (int i = 0; i < epoch; i++)
     {
         forward(hiddenLayer, inputMat);
         Relu(hiddenLayer);
-        for (int out = 0; out < hiddenLayer.out; out++)
-        {
-            std::cout << "z = " << hiddenLayer.z[out] << std::endl;
-            std::cout << "a = " << hiddenLayer.a[out] << std::endl;
-            std::cout << "\n" << std::endl;
-        }
+
+        forward(hiddenLayer2, hiddenLayer.a);
+        // Relu(hiddenLayer2);
+
+        // forward(hiddenLayer3, hiddenLayer2.a);
+        // Relu(hiddenLayer3);
+
+        Softmax(hiddenLayer2);
+        computeOutputDelta(hiddenLayer2, label);
+        backward(hiddenLayer, hiddenLayer2);
+
         break;
     }
+}
+
+void backward(Layer &L, Layer &next)
+{
+
+    for (int i = 0; i < L.out; i++)
+    {
+        float sum = 0.0f;
+        for (int j = 0; j < next.out; j++)
+        {
+            // std::cout << "Weight = " << j * L.out + i << std::endl;
+            std::cout << next.delta[j] << "*" << next.W[(j * L.out) + i] << std::endl;
+            sum += next.delta[j] * next.W[(j * L.out) + i];
+        }
+        L.delta[i] = (L.a[i] > 0.01f ? sum : 0.0f);
+        // iL.delta[i] = (iL.a[i] > 0.01f ? sum : 0.0f);
+        std::cout << "Input Layer activation = " << L.a[i] << std::endl;
+        std::cout << "Input Layer delta = " << L.delta[i] << std::endl;
+    }
+}
+
+
+void computeOutputDelta(Layer &L, int label)
+{
+    for (int out = 0; out < L.out; out++)
+    {
+        L.delta[out] = L.a[out];
+    }
+    L.delta[label] -= 1.0f;
+
+    // for (int out = 0; out < L.out; out++)
+    // {
+    //     std::cout << "y = " << L.a[out] << std::endl;
+    //     std::cout << "delta = " << L.delta[out] << std::endl;
+    // }
 }
 
 void forward(Layer &L, const std::vector<float> &input)
@@ -269,5 +327,20 @@ void Relu(Layer &L)
     for (int out = 0; out < L.out; out++)
     {
         L.a[out] = std::max(0.01f, L.z[out]);
+    }
+}
+
+void Softmax(Layer &L)
+{
+    float e_sum;
+    for (int out = 0; out < L.out; out++)
+    {
+        e_sum += std::exp(L.z[out]);
+    }
+
+    for (int out = 0; out < L.out; out++)
+    {
+        L.a[out] = std::exp(L.z[out]) / e_sum;
+        // std::cout << "Softmax " << out << " = " << L.a[out] << std::endl;
     }
 }
