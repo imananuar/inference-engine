@@ -240,9 +240,12 @@ void trainModelV2(int epoch, int training_size)
     for (int i = 0; i < epoch; i++)
     {
         forward(hiddenLayer, inputMat);
-        for (int j = 0; j < hiddenLayer.out; j++)
+        Relu(hiddenLayer);
+        for (int out = 0; out < hiddenLayer.out; out++)
         {
-            std::cout << "\nz = " << hiddenLayer.z[j] << std::endl;
+            std::cout << "z = " << hiddenLayer.z[out] << std::endl;
+            std::cout << "a = " << hiddenLayer.a[out] << std::endl;
+            std::cout << "\n" << std::endl;
         }
         break;
     }
@@ -258,6 +261,13 @@ void forward(Layer &L, const std::vector<float> &input)
             L.z[out] += input[in] * L.W[(L.in * out) + in];
         }
         L.z[out] += L.b[out];
-        std::cout << "\nz = w*input + b = " << L.z[out];
+    }
+}
+
+void Relu(Layer &L)
+{
+    for (int out = 0; out < L.out; out++)
+    {
+        L.a[out] = std::max(0.01f, L.z[out]);
     }
 }
